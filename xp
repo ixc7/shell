@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# opens xplr -> cd + open text editor
+
+xp () {
+  
+  SELECTED=$(xplr)
+  FILES=""
+  
+  for file in ${SELECTED[$@]}; do
+    if [[ -f $file ]]; then
+      FILES+=" $file"
+    fi
+  done
+
+  if [[ -d $SELECTED ]]; then
+    cd $SELECTED
+  elif [[ ! -z "$FILES" ]]; then
+    micro $FILES
+  fi
+
+  # comment this out unless you want it to run forever.
+  # xp
+
+}
+
+# in $HOME/.bash_profile:
+
+# init_xp () {
+#   source <path-to-dir>/xp && xp 
+# }
+
+xp
