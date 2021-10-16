@@ -1,0 +1,29 @@
+#!/bin/bash
+
+mnd () {
+  out=$HOME/.mnd/pages/
+  css=$HOME/.mnd/styles/mnd.css
+
+  function pager () {
+    [[ ! -z "$1" ]] &&
+    mandoc -T html -O style=${css} $(man -w $1) > ${out}${1}.html && 
+    links ${out}${1}.html
+  }
+
+  function check_most () { 
+    [[ ! -z $(type -p most) ]] && echo "most" || echo ""
+  }
+  # https://www.jedsoft.org/most/index.html
+
+  function render () {
+    [[ ! -z $(check_most) ]] && [[ ! -z $1 ]] && man $1 | most || pager $1
+  }
+
+  function validate () { 
+    [[ -z $(man -w $1) ]] || render $1
+  }
+
+  validate $1
+}
+
+mnd $1
