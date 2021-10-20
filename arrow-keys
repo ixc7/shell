@@ -1,28 +1,32 @@
 #!/bin/bash
 
-while true; do
-  read -rsn1 char
+x1b=$(printf "\x1b")
 
-  if [[ $char == $(printf "\x1b") ]]; then
-    read -rsn2 char
+while true; do
+  read -rsn1 key
+
+  if [[ $key == $x1b ]]; then
+    read -rsn2 key
   fi
 
-  case $char in
+  case $key in
     'q') 
       reset && exit 0
     ;;
     '[A')
-      printf "\x1b[1A"
+      printf "${x1b}[1A"
     ;;
     '[B')
-      printf "\x1b[1B"
+      printf "${x1b}[1B"
     ;;
     '[D')
-      printf "\x1b[1D"
+      printf "${x1b}[1D"
     ;;
     '[C')
-      printf "\x1b[1C"
+      printf "${x1b}[1C"
     ;;
-    *) printf "\x1b[2K" ;;
+    *)
+      printf "${x1b}[2K"
+    ;;
   esac
 done
