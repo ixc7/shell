@@ -1,32 +1,38 @@
 #!/bin/bash
 
-x1b=$(printf "\x1b")
+rate=2
+esc=$(printf "\x1b")
+cup=$(printf "${esc}[${rate}")
 
 while true; do
   read -rsn1 key
 
-  if [[ $key == $x1b ]]; then
+  if [[ $key == $esc ]]; then
     read -rsn2 key
   fi
 
   case $key in
-    'q') 
-      reset && exit 0
-    ;;
     '[A')
-      printf "${x1b}[1A"
+      printf "${cup}A"
+      # up
     ;;
     '[B')
-      printf "${x1b}[1B"
-    ;;
-    '[D')
-      printf "${x1b}[1D"
+      printf "${cup}B"
+      # down
     ;;
     '[C')
-      printf "${x1b}[1C"
+      printf "${cup}C"
+      # right
+    ;;
+    '[D')
+      printf "${cup}D"
+      # left
+    ;;
+    'q')
+      reset && exit 0
     ;;
     *)
-      printf "${x1b}[2K"
+      printf "${esc}[2K"
     ;;
   esac
 done
