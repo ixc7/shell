@@ -1,29 +1,34 @@
 #!/bin/bash
 
-get_num () {
-  [[ ${1} =~ ^[+-]?[0-9]+([.][0-9]+)?$ ]] &&
-  (( $(echo "${1} <= 1" | bc -l) )) &&
-  (( $(echo "${1} > 0" | bc -l) )) &&
-  echo true
+slomo2 () {
+
+  read -p 'search: ' search
+  url=$(ytfzf -L ${search})
+
+  read -p 'speed: ' speed
+  read -p 'filename: ' filename
+  
+  # filepath="$HOME/.slomo/saved/${filename}"
+  filepath="$SLOMO_DIR${filename}"
+  temp="${filepath}.wav"
+  dest="${filepath}.slomo.wav"
+
+  youtube-dl \
+    -o "${filepath}.%(ext)s" \
+    -x --audio-format wav \
+    --audio-quality 0 \
+    --format bestaudio ${url} &&
+  rubberband \
+    --tempo ${speed} \
+    --frequency ${speed} \
+    ${temp} ${dest} &&
+  mpv ${dest} && 
+  # exit 2
+  rm ${temp}
+
+  trap - SIGINT
+  [[ -f ${temp} ]] && rm ${temp}
+
 }
 
-get_url () {
-  if
-    [[ ! -z ${1} ]] &&
-    [[ -n $(curl -s --head ${1} | head -n 1) ]]
-  then
-    echo ${1}
-  else
-    read -p 'search: ' query
-    ytfzf -L ${query}
-  fi
-}
-
-[[ ! -z $(get_num ${1}) ]] &&
-URL=$(get_url ${2}) && [[ ! -z ${URL} ]] &&
-mpv --af=rubberband=pitch-scale=${1} --speed=${1} --no-video ${URL} ||
-echo -e "
-usage: slomo <speed> [url]
-       + speed: any decimal number between 0 and 1. 
-       + url: url of file to play. opens search prompt if none specified.
-"
+slomo2
