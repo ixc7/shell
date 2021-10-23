@@ -1,0 +1,26 @@
+#!/bin/bash
+
+preview () {
+  bat --list-themes | \
+  fzf \
+    --preview-window="right,85%" \
+    --preview="bat --theme={} --color=always ${1}" \
+    --cycle
+}
+
+bat-colors () {
+  selected=$(preview ${1})
+  msg="export BAT_THEME=\"${selected}\""
+  profile=$HOME/.bash_profile
+
+  [[ ! -z ${selected} ]] &&
+    gsed -i "/BAT_THEME/d" ${profile} &&
+    echo ${msg} >> ${profile} &&
+    source ${profile} && 
+    bat ${1}
+}
+
+[[ ! -z ${1} ]] &&
+[[ -f ${1} ]] &&
+  bat-colors ${1} || 
+  echo "usage: bat-colors <filename>"
