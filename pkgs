@@ -1,4 +1,4 @@
-  #!/bin/bash
+#!/bin/bash
 
 query="$1"
 cols=$(tput cols)
@@ -18,8 +18,9 @@ pkgs () {
 }
 
 
+pkgs 'brew' "search $query"
+pkgs 'port' "search $query"
 pkgs 'npm' "search --no-description $query"
 pkgs 'cargo' "search $query --limit 100"
-pkgs 'brew' "search $query"
 pkgs 'ls -a /usr/bin'
 
