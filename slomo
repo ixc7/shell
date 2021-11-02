@@ -1,34 +1,29 @@
 #!/bin/bash
 
-slomo2 () {
-
-  read -p 'search: ' search
-  url=$(ytfzf -L ${search})
-
-  read -p 'speed: ' speed
-  read -p 'filename: ' filename
-  
-  # filepath="$HOME/.slomo/saved/${filename}"
-  filepath="$SLOMO_DIR${filename}"
-  temp="${filepath}.wav"
-  dest="${filepath}.slomo.wav"
-
-  youtube-dl \
-    -o "${filepath}.%(ext)s" \
-    -x --audio-format wav \
-    --audio-quality 0 \
-    --format bestaudio ${url} &&
-  rubberband \
-    --tempo ${speed} \
-    --frequency ${speed} \
-    ${temp} ${dest} &&
-  mpv ${dest} && 
-  # exit 2
-  rm ${temp}
-
-  trap - SIGINT
-  [[ -f ${temp} ]] && rm ${temp}
-
+isnum () {
+  exp='^[+-]?[0-9]+([.][0-9]+)?$'
+  ! [[ ${1} =~ ${exp} ]] && 
+    echo -e "${1} is not a valid number" && 
+    exit 1
 }
 
-slomo2
+slomo3 () {
+  
+  [[ ! -z "${1}" ]] &&
+    url="${1}" ||
+    read -p 'search: ' search
+    url=$(ytfzf -L ${search})
+  
+  [[ ! -z "${2}" ]] &&
+    speed="${2}" ||
+    read -p 'speed: ' speed
+  
+  isnum ${speed}
+  
+  mpv "${url}" \
+    --no-video \
+    --speed="${speed}" \
+    --audio-pitch-correction=no
+}
+
+slomo3 "${@}"

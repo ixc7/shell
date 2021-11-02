@@ -11,12 +11,13 @@ getCoordinates () {
   str+=$key &&
   getCoordinates $str ||
 
-  [[ $key == M ]] && 
-  tput setab 4 ||
-  tput setab 6
-
   y=$(( $(echo $str | cut -d ';' -f 2) - 1 ))
   x=$(( $(echo $str | cut -d ';' -f 1) - 1 ))
+
+  [[ $key == M ]] && 
+  tput setab 4 ||
+  tput setab 12
+
   tput cup $y $x && printf ' '
 }
 
