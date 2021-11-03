@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/local/bin/bash
 
 preview () {
   bat --list-themes | \
@@ -10,13 +10,12 @@ preview () {
 
 bat-colors () {
   selected=$(preview ${1})
-  msg="export BAT_THEME=\"${selected}\""
-  profile=$HOME/.bash_profile
+  msg="--theme=\"${selected}\""
+  profile=$(bat --config-file)
 
   [[ ! -z ${selected} ]] &&
-    gsed -i "/BAT_THEME/d" ${profile} &&
+    gsed -i "/--theme=/d" ${profile} &&
     echo ${msg} >> ${profile} &&
-    source ${profile} && 
     bat ${1}
 }
 
