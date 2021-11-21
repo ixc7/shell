@@ -1,0 +1,20 @@
+#!/usr/local/bin/bash
+
+trap reset SIGINT
+
+width=$((
+  $(tput cols) / 3
+))
+
+height=$((
+  $((
+    $(tput lines) * 2
+  )) / 3
+))
+
+[[ ! -z $(which timg) ]] &&
+  clear && 
+  timg * \
+    --frames=1 \
+    --pixelation=i \
+    -g ${width}x${height}
