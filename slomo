@@ -4,6 +4,7 @@ trap cleanup EXIT SIGINT SIGTERM SIGKILL
 
 cleanup () {
   stty echo
+  tput civis
   tput sgr0
   exit 0
 }
@@ -40,30 +41,40 @@ mpv "${url}" \
   --audio-pitch-correction=no
 
 read -p 'save file? <yY/*> ' save
+# get rid of the stupid key icon
+stty -echo
 
 if 
   [[ $save == "Y" ]] || 
   [[ $save == "y" ]]
 then
   savedname=$(rlwrap -S 'filename : ' -P "${filename}" -o cat)
-  [[ -z "$savedname" ]] &&
-    savedname="$filename"
+  # ...again
+  stty echo
 
+  [[ -z "$savedname" ]] && savedname="$filename"
   savedfile="${SLOMO_DIR}${savedname}_$(echo ${speed} | tr -d '.')"
   temp=$(mktemp --suffix="${suffix}")
-
+  
+  tput civis
+  stty -echo
+  stty flusho
+  
   youtube-dl \
      -o "${savedfile}.%(ext)s" \
      -x --audio-format wav \
      --audio-quality 0 \
      --format bestaudio ${url} &&
-   rubberband \
-     --tempo ${speed} \
-     --frequency ${speed} \
+  rubberband \
+    --tempo ${speed} \
+    --frequency ${speed} \
     "${savedfile}${suffix}" "${temp}" &&
-   mv ${temp} ${savedfile}
+  mv "${temp}" "${savedfile}${suffix}"
 
-   tput bold
-   echo -e "\nfile saved to ${savedfile}${suffix}\n"
-   tput sgr0
+  stty -flusho
+  stty echo
+  tput cnorm
+  tput bold
+  echo -e "\nfile saved to ${savedfile}${suffix}\n"
+  tput sgr0
 fi
