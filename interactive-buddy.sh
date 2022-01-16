@@ -1,3 +1,4 @@
 #!/usr/local/bin/bash
 
-flash https://www.newgrounds.com/portal/view/218014
+source ./newgrounds-dl.sh && ngdl https://www.newgrounds.com/portal/view/218014
+
