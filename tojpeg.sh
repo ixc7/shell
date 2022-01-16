@@ -1,40 +1,45 @@
 #!/usr/local/bin/bash
 
 inputdir="."
+ext=".jpeg"
 
-if [[ ! -z "${1}" ]] && [[ -d "${1}" ]]
+alreadyexists=0
+errorcount=0
+precount=0
+
+if  [[ ! -d "${1}" ]]
 then
-  inputdir="${1}"
-elif [[ ! -z "${1}" ]]
-then
-  echo -e "\n\x1b[1merror: ${1} is not a directory\x1b[0m"
+  [[ -z "${1}" ]] && 
+    msg="\n\x1b[1merror: no path specified\x1b[0m" ||
+    msg="\n\x1b[1merror: ${1} is not a directory\x1b[0m"
+    
+  echo -e "${msg}"
   read -p "use current directory? <y/n>: " res
 
-  if [[ ${res} == "y" ]] ||
-  [[ ${res} == "Y" ]] ||
-  [[ ${res} == "yes" ]] ||
-  [[ ${res} == "Yes" ]]
+  if (
+    [[ ${res} == "y" ]] ||
+    [[ ${res} == "Y" ]] ||
+    [[ ${res} == "yes" ]] ||
+    [[ ${res} == "Yes" ]]
+  ) 
   then
     echo -e "using \x1b[1m$(pwd)\x1b[0m"
   else
     exit 0
   fi
+else
+  inputdir="${1}"
 fi
 
 incount=$(ls -1 ${inputdir} | wc -l)
+resultsdir="${inputdir}/converted-to-jpeg"
+list="$(ls -1 ${inputdir} | tr ' ' '@')"
 
 if [[ ${incount} == 0 ]]
 then
   echo -e "\n\x1b[1merror: directory is empty\x1b[0m"
   exit 0
 fi
-
-ext=".jpeg"
-resultsdir="${inputdir}/converted-to-jpeg"
-list="$(ls -1 ${inputdir} | tr ' ' '@')"
-precount=0
-alreadyexists=0
-errorcount=0
 
 if [[ -d "${resultsdir}" ]]
 then
@@ -44,7 +49,6 @@ else
   mkdir -p "${resultsdir}"
 fi
 
-# ns
 echo -e "\nscanning for files in \x1b[1m${inputdir}\x1b[0m"
 
 for item in ${list}
