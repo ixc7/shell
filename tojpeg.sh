@@ -11,8 +11,9 @@ then
   read -p "use current directory? <y/n>: " res
 
   if [[ ${res} == "y" ]] ||
-  [[ ${res} == "y" ]] ||
-  [[ ${res} == "y" ]]
+  [[ ${res} == "Y" ]] ||
+  [[ ${res} == "yes" ]] ||
+  [[ ${res} == "Yes" ]]
   then
     echo -e "using \x1b[1m$(pwd)\x1b[0m"
   else
