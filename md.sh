@@ -1,29 +1,39 @@
 #!/usr/local/bin/bash
 
-args=false
-files=""
+default="readme"
+nonPaths=false
+list=""
 
+parser () {
+  ${@} | highlight -s base16/macintosh -S pdf -O xterm256 | less -r
+}
+
+# if no args, cat readmes* | highlight
 if [[ -z ${@} ]]; then
-  if [[ $(ls | rga -e readme | wc -l) != 0 ]]; then
-    cat $(ls | rga -e readme | tr '\n' ' ') | highlight -s base16/macintosh -S pdf -O xterm256 | less -r
+  if [[ $(ls | rga -e "${default}" | wc -l) -gt 0 ]]; then
+    parser cat $(ls | rga -e "${default}" | tr '\n' ' ')
   fi
   exit 0
 fi
 
+# else, determine if args are all paths
 for arg in ${@}; do
+  # if not a path to something, stop checking
   if [[ ! -f ${arg} ]] && [[ ! -d ${arg} ]]; then
-    args=true
+    nonPaths=true
+    break
   fi
-
-  if [[ -f ${arg} ]]; then
-    files="${files} ${arg}"
-  fi
+  # if file or dir, add to list
+  [[ -f ${arg} ]] && list="${list} ${arg}"
+  [[ -d ${arg} ]] && list="${list} ${arg}/*"
 done
 
-if [[ ${args} == false ]]; then
-  if [[ ${#files} != 0 ]]; then
-    cat ${files} | highlight -s base16/macintosh -S pdf -O xterm256 | less -r
-  fi
-else
-  ${@} | highlight -s base16/macintosh -S pdf -O xterm256 | less -r
+# if mixed args
+if [[ ${nonPaths} == true ]]; then
+  parser ${@}
+# else, if paths only
+elif [[ ${#list} -gt 0 ]]; then
+  for file in ${list}; do
+    parser cat ${file}
+  done
 fi
