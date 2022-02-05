@@ -1,0 +1,21 @@
+#!/usr/local/bin/bash
+
+[[ -z "${1}" ]] && exit 1
+
+tempfile=$(mktemp)
+
+( 
+  # if no 'flag' passed, use 'man'
+  # 'flag' is ${2}, which can be anything.
+  [[ -z "${2}" ]] &&
+  ./lsman "${1}" "${tempfile}" &&
+  export MANWIDTH=$(tput cols) && 
+  md man $(cat "${tempfile}")
+) ||
+(
+  # tries to find help pages if no manpages are found
+  # if 'flag' use '--help' instead of 'man'
+  # 'flag' is still ${2}, but passed at position ${3} for lsman
+  ./lsman "${1}" "${tempfile}" true &&
+  md $(cat "${tempfile}") --help
+)

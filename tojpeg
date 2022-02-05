@@ -2,6 +2,7 @@
 
 inputdir="."
 ext=".jpeg"
+[[ ! -z "${2}" ]] && ext="${2}"
 
 alreadyexists=0
 errorcount=0
@@ -53,6 +54,7 @@ echo -e "\nscanning for files in \x1b[1m${inputdir}\x1b[0m"
 
 for item in ${list}
 do
+  # TODO handle . in filenames
   prefix=$(echo "${item}" | tr '@' ' ' | cut -d '.' -f 1)
   original=$(echo "${item}" | tr '@' ' ')
   changed="${prefix}${ext}"
@@ -70,7 +72,7 @@ do
         echo -e "         trying ${prefix}-${trycount}${ext}\x1b[1A"
         if [[ ! -f "${renamedOutput}" ]]
         then
-          ffmpeg -n -loglevel fatal -i "${inputdir}/${original}" "${renamedOutput}" &&
+          ffmpeg -n -loglevel fatal -f image2 -i "${inputdir}/${original}" "${renamedOutput}" &&
           echo -e "         saved as \x1b[1m${prefix}-${trycount}${ext}\x1b[0m" &&
           break
         else
@@ -78,7 +80,7 @@ do
         fi
       done
     else
-      ffmpeg -n -loglevel fatal -i "${inputdir}/${original}" "${output}" ||
+      ffmpeg -n -loglevel fatal -f image2 -i "${inputdir}/${original}" "${output}" ||
       echo -e "\n\x1b[1mskipped:\x1b[0m can't convert file: ${original}" && 
         incount=$((incount - 1)) && 
         errorcount=$((errorcount + 1))

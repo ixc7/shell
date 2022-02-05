@@ -1,0 +1,14 @@
+#!/bin/bash
+
+trap "tput sgr0" exit
+clear && printf "[3J"
+
+check_colors () {
+  tput bold && echo -e "\ncolors : $(tput colors)\n" && tput sgr0
+  for i in {0..255}; do printf "\e[48;5;%dm%3d " $i $i; (((i+3) % 18)) || printf "\e[0m\n"; done
+  echo -e "\n\n" && tput sgr0
+  for i in {0..255}; do printf "\e[38;5;%dm%3d " $i $i; (((i+3) % 18)) || printf "\e[0m\n"; done
+  echo -e "\n"
+}
+
+check_colors

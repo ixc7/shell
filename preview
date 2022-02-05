@@ -1,0 +1,60 @@
+#!/usr/local/bin/bash
+
+width=$(tput cols)
+height=$(($(tput lines) / 2))
+maxWidth=120
+maxHeight=50
+path="."
+
+[[ -z "${1}" ]] || path="${1}"
+
+list=$(
+  find ${path} \
+    -maxdepth 1 \
+    -type f \
+    -iname "*.mp4" -or \
+    -iname "*.mkv" -or \
+    -iname "*.mov" -or \
+    -iname "*.wmv" -or \
+    -iname "*.webm" -or \
+    -iname "*.jpeg" -or \
+    -iname "*.jpg" -or \
+    -iname "*.gif" -or \
+    -iname "*.png" 
+)
+
+[[ ${#list} -lt 1 ]] && exit 0
+[[ ${width} -ge ${maxWidth} ]] && width=${maxWidth}
+[[ ${height} -ge ${maxHeight} ]] && height=${maxHeight}
+
+while true; do
+  selection=$(
+    echo "${list}" | fzf \
+    --cycle \
+    --exact \
+    --layout="reverse-list" \
+    --preview-window="top,50%" \
+    --preview="timg -pq --frames=1 -g${width}x${height} {}"
+  )
+  [[ -z "${selection}" ]] && break
+
+  echo -e "\nselected: ${selection}"
+  read -p "c) copy o) open q) quit ... " res
+  ([[ "${res}" == "q" ]] || [[ "${res}" == "Q" ]]) && break
+
+  if [[ "${res}" == "o" ]] || [[ "${res}" == "O" ]]; then
+    mpv "${selection}" \
+    --ontop \
+    --loop-playlist \
+    --autofit="50%" \
+    --audio-pitch-correction="no" \
+    --mute
+    # --volume="75"
+  elif [[ "${res}" == "c" ]] || [[ "${res}" == "C" ]]; then
+    file="$(pwd)/${selection}"
+    [[ "${path}" == "." ]] && file="${selection}"
+    echo -ne "${file}" | pbcopy
+    echo -e "copied to clipboard: ${file}" &&
+    break
+  fi
+done

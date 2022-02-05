@@ -1,0 +1,10 @@
+#!/usr/local/bin/bash
+
+trash="${HOME}/.Trash"
+width=$(tput cols)
+cursorUp="\x1b[5A\x1b[J"
+
+rm -rf ${trash} &&
+echo -e "\x1b[1m$(figlet -f miniwi -w "${width}" emptied the trash)\x1b[0m" &&
+sleep 0.325 &&
+echo -ne "${cursorUp}"

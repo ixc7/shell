@@ -1,0 +1,12 @@
+#!/usr/local/bin/bash
+
+[[ -z "${1}" ]] && exit 0
+
+trash="${HOME}/.Trash/"
+
+[[ -d "${trash}" ]] || mkdir -p "${trash}"
+
+# TODO loop this
+mv "${@}" "${trash}" || ( notrash && mv "${@}" "${trash}" ) || exit 0
+
+echo "moved ${#@} items to ${trash}"

@@ -1,0 +1,66 @@
+#!/usr/local/bin/bash
+
+cmd="${1}"
+tempfile="${2}"
+pos=0
+len=0
+
+bold () { echo -ne "\x1b[1m${1}\x1b[0m\r"; }
+mvup () { echo -ne "\x1b[1A\r"; }
+mvdown () { echo -ne "\x1b[1B\r"; }
+
+[[ -z "${1}" ]] && exit 1
+[[ -z "${2}" ]] && tempfile=$(mktemp)
+
+list=($(type -afp "${cmd}"))
+[[ -z "${3}" ]] && list=($(man -aW "${cmd}"))
+
+[[ ${#list[@]} -lt 1 ]]  && exit 1
+[[ ${#list[@]} -eq 1 ]] && echo -n "${list[0]}" > "${tempfile}" && exit 0 
+
+ns
+
+for i in "${list[@]}"; do
+  echo "${i}"
+  ((len+=1))
+done
+
+tput cup 0 0
+bold "${list[pos]}\r"
+
+while true; do
+  read -r -sn1 t
+  case $t in
+    "A")
+      if [[ pos -gt 0 ]]
+      then
+        printf "${list[pos]}\r"
+        ((pos-=1))
+        mvup
+      else
+        printf "${list[pos]}\r"
+        pos=$((len - 1))
+        tput cup $((len - 1)) 0
+      fi 
+      bold "${list[pos]}\r"
+    ;; 
+    "B")
+      if [[ pos -lt $((len - 1)) ]]
+      then
+        printf "${list[pos]}\r"
+        ((pos+=1))
+        mvdown
+      else
+        printf "${list[pos]}\r"
+        pos=0
+        tput cup 0 0
+      fi 
+      bold "${list[pos]}\r"
+    ;; 
+    "" )
+      ns
+      echo -n "${list[pos]}" > "${tempfile}"
+      break
+    ;;
+  esac
+done

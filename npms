@@ -1,0 +1,41 @@
+#!/usr/local/bin/bash
+
+[[ -z ${1} ]] && 
+echo -e "usage: \x1b[1mnpms\x1b[0m [cat bat dog horse fish bird ... package names]" &&
+exit 0
+
+list="${@}"
+count=0
+
+info-all () {
+  for item in ${list}
+  do
+    result=$(npm info ${item} --silent | head -n 4)
+    exists=$(echo -ne "${result}" | wc -l)
+    github=$(echo -ne "${result}" | tail -n 1 | rga -e github)
+    
+    if [[ ${exists} -gt 0 ]]
+    then
+      # echo -e "${result}" | head -n 2 | cut -d '|' -f 1
+      echo -e "${result}"
+      count=$((count + 1))
+    fi
+    
+    if [[ -n "${github}" ]]
+    then
+      reponame=$(echo -e "${github}" | tr '#' '/' | cut -d '/' -f 4-5) &&
+      readmeurl="https://raw.githubusercontent.com/${reponame}/master/README.md" &&
+      echo -e "${readmeurl}"
+    fi
+  done
+}
+
+ns && 
+echo -e "searching for: ${list// /, }" && 
+info-all && 
+echo -e "\nfound ${count} packages"
+
+exit 0
+
+
+# npsearch cat bat dog horse fish bird

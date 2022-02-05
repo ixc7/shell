@@ -1,0 +1,12 @@
+#!/usr/local/bin/bash
+
+if
+  [[ -z "${1}" ]] ||
+  [[ ! -f "${1}" ]] &&
+  [[ ! -d "${1}" ]]
+then
+  echo -e "\nget - copies path to clipboard\nusage: \x1b[1mget\x1b[0m <file|dir>\n" &&
+  exit 0 
+fi
+
+echo -ne "$(realpath ${1})" | pbcopy && echo -e "copied $(realpath ${1}) to clipboard"

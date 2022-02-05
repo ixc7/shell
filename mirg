@@ -1,0 +1,11 @@
+#!/usr/local/bin/bash
+
+[[ -z "${1}" ]] &&
+  echo -e "
+    \r\x1b[1mmirg\x1b[0m - opens files containing pattern matches w/ \x1b[1m${EDITOR}\x1b[0m and \x1b[1mrga\x1b[0m
+    \rusage: \x1b[1mmirg\x1b[0m [pattern...]
+  " &&
+  exit 0
+
+matches=$(rga --files-with-matches -e "${@}" | tr '\n' ' ')
+[[ ${#matches} -lt 1 ]] || ${EDITOR} ${matches}

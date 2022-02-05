@@ -1,0 +1,23 @@
+#!/usr/local/bin/bash
+
+urle () { 
+  [[ "${1}" ]] || return 1
+  local LANG=C i x
+  for (( i = 0; i < ${#1}; i++ )); do 
+    x="${1:i:1}"
+    [[ "${x}" == [a-zA-Z0-9.~_-] ]] && echo -n "${x}" || printf '%%%02X' "'${x}"
+  done
+  echo 
+}
+
+read -p "search: " input
+
+suffix=$(urle "${input}")
+prefix="https://www.newgrounds.com/search/conduct/games?terms="
+results=$(curl -s "${prefix}${suffix}" | rga -e https://www.newgrounds.com/portal/view/ | tr -d '\t' | cut -d '"' -f 2)
+
+ns
+for url in ${results}; do
+  ngdl "${url}"
+done
+

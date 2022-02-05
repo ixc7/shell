@@ -1,0 +1,24 @@
+#!/usr/local/bin/bash
+
+name="${1}"
+
+if [[ -z "${1}" ]]; then
+  read -p "package name: " input
+  name="${input}"
+  [[ -z "${input}" ]] && name="none" 
+fi
+
+read -p "generate package.json? <y/n> " input
+
+if [[ "${input}" == "y" ]] || [[ "${input}" == "Y" ]]; then
+echo -e "{
+  \"name\": \"${name}\",
+  \"version\": \"0.0.1\",
+  \"type\": \"module\",
+  \"main\": \"index.js\",
+  \"license\": \"MIT\"
+}
+" > "package.json" &&
+  echo "wrote default config to package.json" &&
+  cat "package.json"
+fi

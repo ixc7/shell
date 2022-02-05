@@ -1,0 +1,15 @@
+#!/usr/local/bin/bash
+
+error () {
+  [[ -z "${1}" ]] || echo -e "${@}"
+  echo -e "
+    \rusage: miw <command name>
+    \redit files in \${PATH} variable
+  "
+  exit 0
+}
+
+[[ -z "${1}" ]] && error
+[[ -z $(which "${1}") ]] && error "'${1}' not found"
+
+"${EDITOR}" "$(which "${1}")"

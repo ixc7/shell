@@ -1,0 +1,5 @@
+#!/usr/local/bin/bash
+
+[[ -z "${1}" ]] && echo -e "\norphan - creates a new branch with no commit history\nusage: \x1b[1morphan\x1b[0m <branch name>\n" && exit 0
+
+git checkout --orphan "${1}"

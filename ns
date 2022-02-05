@@ -1,0 +1,3 @@
+#!/usr/local/bin/bash
+
+printf "\x1b[?25h\x1b[0m\x1Bc\x1b[3J"

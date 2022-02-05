@@ -1,0 +1,22 @@
+#!/usr/local/bin/bash
+
+header=$(basename "$(pwd)")
+
+# echo -e "$(cfonts "${header}" -c "cyan" -f tiny)" &&
+ns &&
+echo &&
+pwd &&
+echo &&
+gls . \
+  -lAhSstcC \
+  --si \
+  --color=always \
+  -I "node_modules" \
+  -I ".git" \
+  -I ".gitignore" \
+  -I ".DS_Store" \
+  -I "*.RPP" \
+  -I "*.RPP-bak" \
+  -I "*.reapeaks" \
+  -I "*.reapindex" &&
+echo

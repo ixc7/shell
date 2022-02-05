@@ -1,0 +1,31 @@
+#!/usr/local/bin/bash
+
+
+pathnames=$(echo $PATH | tr ':' '\n')
+temp=$(mktemp)
+
+cleanup () {
+  rmf "${temp}"
+  la
+  exit 0
+}
+
+trap cleanup EXIT
+
+(
+  echo
+  figlet -f miniwi "all \${PATH} files:"
+  echo
+) >> "${temp}"
+
+for name in $pathnames
+do
+  [[ ! -d "${name}" ]] ||
+  (
+    hr=$(range=$(seq ${#name}); for i in $range ; do echo -n "-"; done)
+    echo -e "\n${hr}\n${name}\n${hr}\n"
+    ls "${name}" | column -c $(tput cols)
+  ) >> "${temp}"
+done
+
+less -Ir -k "/Users/admin/.mkcmds/lib/.lpathkeys" "${temp}"

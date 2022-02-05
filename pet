@@ -1,0 +1,18 @@
+#!/usr/local/bin/bash
+
+error=false
+
+quit () {
+  stty sane
+  [[ "${error}" != false ]] && 
+    echo -e "\n${error}\n\npet - copies filepath in clipboard to current directory\nusage: \x1b[1mpet\x1b[0m\n"
+  exit 0 
+}
+
+trap quit EXIT
+
+filepath="$(pbpaste)"
+[[ ! -f "${filepath}" ]] && error="'${filepath}' is not a file"
+[[ -z "${filepath}" ]] && error="clipboard is empty"
+
+[[ "${error}" == false ]] && stty flusho && cp "${filepath}" "$(pwd)"
