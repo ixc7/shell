@@ -13,9 +13,18 @@ nothingFound () {
   exit 1
 }
 
+helpText () {
+  echo -e "\npnps - search npm registry for packages\nusage: \x1b[1mpnps\x1b[0m <package name>\n"
+  exit 0
+}
+
 cleanup () {
   tput rmcup
-  [[ -z "${1}" ]] || echo -e "${@}"
+  [[ -z "${selection}" ]] || 
+  (
+    echo -n "${selection}" | pbcopy &&
+    echo -e "\nrepository \x1b[1m\x1b[38;5;97m${repository}\x1b[0m copied to clipboard\n"
+  )
   exit 0
 }
 
@@ -32,14 +41,21 @@ declare -a results=()
 moreInfo () {
   tput cup 0 0
   echo -e "\x1b[J"
+
   prompt=$(echo -ne "get info for \x1b[1m${selection}\x1b[0m? ")
+
   read -p "${prompt}" answer
   if [[ "${answer}" == "Y" ]] || [[ "${answer}" == "y" ]]; then
+    repository=$(repo "${selection}")
     pnpm info "${selection}"
-    echo
+    echo -e "\n\x1b[1m\x1b[38;5;97m${repository}\x1b[0m\n"
+    selection="${repository}"
     read -p "press [ENTER] to continue"
+  else
+    selection=""
   fi
-  cleanup
+
+  exit 0
 }
 
 renderChoices () {
@@ -47,9 +63,9 @@ renderChoices () {
   declare -a list=()
 
   tput smcup
+  tput civis
   mvup
   echo -ne "${printMargin}found matches: \x1b[1m\x1b[38;5;77m${query}\x1b[0m"
-  tput civis
   tput cup 3 0
   
   for i in ${@}; do
@@ -131,7 +147,7 @@ render() {
   done
 }
 
-[[ -z "${query}" ]] && exit 1
+if [[ -z "${query}" ]] || [[ "${query}" == "-h" ]] || [[ "${query}" == "--help" ]]; then helpText; fi
 
 tput smcup
 echo -e "\n\r${printMargin}searching for: \x1b[1m\x1b[38;5;75m${query}\x1b[0m" &&
