@@ -1,9 +1,25 @@
 #!/usr/local/bin/bash
 
+selection=""
+query="${1}"
 
 bold () { echo -ne "\x1b[1m${@}\x1b[0m\r"; }
 mvup () { echo -ne "\x1b[1A\r"; }
 mvdown () { echo -ne "\x1b[1B\r"; }
+
+nothingFound () { 
+  tput rmcup
+  echo -ne "\x1b[1B\x1b[1m\x1b[38;5;1mnothing found\x1b[0m\n\x1b[2A\x1b[2K"
+  exit 1
+}
+
+cleanup () {
+  tput rmcup
+  [[ -z "${1}" ]] || echo -e "${@}"
+  exit 0
+}
+
+trap cleanup EXIT
 
 pos=0
 margin=4
@@ -13,10 +29,27 @@ temp=$(mktemp)
 declare -a results=()
 
 
+moreInfo () {
+  tput cup 0 0
+  echo -e "\x1b[J"
+  prompt=$(echo -ne "get info for \x1b[1m${selection}\x1b[0m? ")
+  read -p "${prompt}" answer
+  if [[ "${answer}" == "Y" ]] || [[ "${answer}" == "y" ]]; then
+    pnpm info "${selection}"
+    echo
+    read -p "press [ENTER] to continue"
+  fi
+  cleanup
+}
+
 renderChoices () {
   len=0
   declare -a list=()
 
+  tput smcup
+  mvup
+  echo -ne "${printMargin}found matches: \x1b[1m\x1b[38;5;77m${query}\x1b[0m"
+  tput civis
   tput cup 3 0
   
   for i in ${@}; do
@@ -27,6 +60,7 @@ renderChoices () {
   done
 
   tput cup 3 0
+  tput cnorm
   bold "${list[pos]}\r"
   
   while true; do
@@ -59,56 +93,50 @@ renderChoices () {
         bold "${list[pos]}\r"
       ;; 
       "" )
-        # ns
-        # echo -n "${list[pos]}" > "${tempfile}"
-        break
+        selection=$(echo "${list[pos]}" | cut -d "|" -f 1 | tr -d " ")
+        
+        [[ -z "${selection}" ]] && exit 1
+        moreInfo "${selection}"
       ;;
     esac
   done
   
 }
 
-(
-  render() {
-    list=$(npm search "${1}" --json | jq '.[] | .name + "|" + .description' | tr " " "_")
+render() {
+  list=$(npm search "${1}" --json | jq '.[] | .name + "|" + .description' | tr " " "_")
 
-    for i in ${list}; do
-      item=$(echo "${i}" | tr -d '"' | tr "_" " ")
-      sanitized=$(echo "${item}" | tr " " "_")
-      title=$(echo "${item}" | cut -d "|" -f 1)
-      [[ ${#title} -gt ${max} ]] && max=${#title}
+  for i in ${list}; do
+    item=$(echo "${i}" | tr -d '"' | tr "_" " ")
+    sanitized=$(echo "${item}" | tr " " "_")
+    title=$(echo "${item}" | cut -d "|" -f 1)
+    [[ ${#title} -gt ${max} ]] && max=${#title}
 
-      results+=(${sanitized})
-    done
+    results+=(${sanitized})
+  done
 
-    for i in ${results[*]}; do
-      title=$(echo "${i}" | cut -d "|" -f 1)
-      description=$(echo "${i}" | cut -d "|" -f 2)
+  for i in ${results[*]}; do
+    title=$(echo "${i}" | cut -d "|" -f 1)
+    description=$(echo "${i}" | cut -d "|" -f 2)
+    padding=$(for i in $(seq $((${max} - ${#title}))); do echo -n " "; done)
+    
+    leftTxt="${printMargin}${title}${padding}  |  "
 
-      padding=$(for i in $(seq $((${max} - ${#title}))); do echo -n " "; done)
-      leftTxt="${printMargin}${title}${padding}  |  "
+    descriptionLen=$(($(($(tput cols) - ${#leftTxt})) - $((${margin} * 2))))
+    [[ ${descriptionLen} -lt 1 ]] && descriptionLen=1
+    
+    rightTxt=$(echo "${description}" | cut -c 1-${descriptionLen})
 
-      descriptionLen=$(($(($(tput cols) - ${#leftTxt})) - $((${margin} * 2))))
-      [[ ${descriptionLen} -lt 1 ]] && descriptionLen=1
-      
-      rightTxt=$(echo "${description}" | cut -c 1-${descriptionLen})
+    echo "${leftTxt}${rightTxt}" | tr "_" " "
+  done
+}
 
-      echo "${leftTxt}${rightTxt}" | tr "_" " "
-    done
-  }
+[[ -z "${query}" ]] && exit 1
 
-  [[ -z "${1}" ]] || 
-  (
-    echo -ne "
-      \x1Bc\x1b[3J
-      \r${printMargin}searching for: \x1b[1m\x1b[38;5;75m${1}\x1b[0m
-    " &&
-    declare -a choices=($(render "${1}" | tr " " "#" | tr "\n" " ")) &&
-    echo -ne "
-      \x1Bc\x1b[3J
-      \r${printMargin}found matches: \x1b[1m\x1b[38;5;77m${1}\x1b[0m
-    " &&
-    renderChoices ${choices[*]}
-    echo
-  )
-)
+tput smcup
+echo -e "\n\r${printMargin}searching for: \x1b[1m\x1b[38;5;75m${query}\x1b[0m" &&
+declare -a choices=($(render "${query}" | tr " " "#" | tr "\n" " "))
+
+[[ ${#choices} -lt 1 ]] && nothingFound
+
+renderChoices ${choices[*]} 
