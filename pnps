@@ -1,0 +1,47 @@
+#!/usr/local/bin/bash
+
+margin=4
+printMargin=$(for i in $(seq ${margin}); do echo -n " "; done)
+max=0
+temp=$(mktemp)
+declare -a results=()
+
+(
+  render() {
+    list=$(npm search "${1}" --json | jq '.[] | .name + "|" + .description' | tr " " "_")
+
+    for i in ${list}; do
+      item=$(echo "${i}" | tr -d '"' | tr "_" " ")
+      sanitized=$(echo "${item}" | tr " " "_")
+      title=$(echo "${item}" | cut -d "|" -f 1)
+      [[ ${#title} -gt ${max} ]] && max=${#title}
+
+      results+=(${sanitized})
+    done
+
+    for i in ${results[*]}; do
+      title=$(echo "${i}" | cut -d "|" -f 1)
+      description=$(echo "${i}" | cut -d "|" -f 2)
+
+      padding=$(for i in $(seq $((${max} - ${#title}))); do echo -n " "; done)
+      leftTxt="${printMargin}${title}${padding}  |  "
+
+      descriptionLen=$(($(($(tput cols) - ${#leftTxt})) - $((${margin} * 2))))
+      [[ ${descriptionLen} -lt 1 ]] && descriptionLen=1
+      
+      rightTxt=$(echo "${description}" | cut -c 1-${descriptionLen})
+
+      echo "${leftTxt}${rightTxt}" | tr "_" " "
+    done
+  }
+
+  [[ -z "${1}" ]] || 
+  (
+    echo -e "
+      \x1Bc\x1b[3J
+      \r${printMargin}searching for \x1b[1m\x1b[38;5;6m${1}\x1b[0m
+    " &&
+    render "${1}" && 
+    echo
+  )
+)
