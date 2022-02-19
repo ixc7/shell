@@ -1,0 +1,92 @@
+#!/usr/local/bin/bash
+
+cleanup () {
+  code="${1}"
+  [[ -z "${1}" ]] && code=0
+
+  tput cnorm
+  exit ${code}
+}
+
+
+
+# 24-27, 32, 33, 39, 45 blue
+
+
+trap cleanup EXIT
+
+u="\x1b[38;5;25m"
+uu="\x1b[38;5;32m"
+n="\x1b[0m"
+clearLine="\x1b[1K\r"
+startMsg="checking for oudated packages"
+
+loader () {
+  count=0
+  max="${1}"
+  [[ -z "${1}" ]] && max=10
+  
+  while true; do
+    if [[ ${count} -ge ${max} ]]; then
+      count=0
+      echo -ne "${clearLine}"
+    fi
+      count=$((count + 1))
+      echo -n "." && sleep 0.15
+  done
+}
+
+pip-update-all () {
+  
+  tput civis
+  echo -e "${u}${startMsg}${n}${u}"
+  
+  loader ${#startMsg} & loaderID=$(echo ${!})
+
+  outdated=$(pip list -o --format json | jq '.[].name') && 
+  total=$(echo -e "${outdated}" | wc -l)
+  sanitizedOutdated=$(echo -e "${outdated}" | tr -d "\"")
+
+  kill ${loaderID}
+
+  echo -ne "${n}"
+  tput cnorm
+  
+  if [[ ${total} -lt 2 ]]; then
+    echo -e "${clearLine}${u}all packages up to date${n}\n"
+    exit 0
+  fi
+
+  echo -e "${clearLine}\n${u}found ${total} packages${n}\n\n${sanitizedOutdated}\n"
+  
+  for item in ${outdated}; do
+    sanitized=$(echo "${item}" | tr -d "\"")
+
+    tput civis
+    echo -e "${clearLine}${uu}updating${n} ${sanitized}${uu}"
+
+    loader $(( ${#sanitized} + 9 )) & myLoaderID=$(echo ${!})
+
+    yes | pip3 uninstall -qq "${sanitized}" > /dev/null 2>&1 && 
+    yes | pip3 install -qq "${sanitized}" > /dev/null 2>&1
+    
+    kill ${myLoaderID}
+
+    echo -ne "${n}"
+    tput cnorm
+  done
+  
+  echo -e "${clearLine}\n${u}complete${n}"
+}
+
+testpip () { 
+  ns && echo -e "\n--------------\nsetup test env\n--------------\n" && yes | pip3 uninstall scdl pandas colorama && yes | pip3 install scdl===1.6.2 colorama===0.4.3 pandas===1.3.4 && ns && echo -e "\n-----------\nfirst pass\n-----------\n" && pip-update-all && echo -e "\n-----------\nsecond pass\n-----------\n" && pip-update-all
+}
+
+
+if [[ "${1}" == "--test" ]] || [[ "${1}" == "-t" ]]; then
+  testpip
+else
+  pip-update-all
+fi
+
