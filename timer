@@ -1,0 +1,84 @@
+#!/usr/local/bin/bash
+
+# usage: source this file in .bashrc, .profile, .bash_profile, etc
+# inspired by: https://github.com/jichu4n/bash-command-timer
+
+CMD="gdate"
+[[ -z $(which "${CMD}") ]] && CMD="date"
+
+getTime () {
+  ${CMD} +%s%N
+}
+
+SESSION_START=$(getTime)
+START_TIME=$(getTime)
+NEW_TIMER=true
+CODE=0
+
+sc="\x1b7"
+rc="\x1b8"
+noline="\x1b[1K"
+  
+formatDate () {
+
+  local input="${1}"
+  local days=$(($input / $DAY))
+  local hours=$(($input % $DAY / $HOUR))
+  local mins=$(($input % $HOUR / $MIN))
+  local secs=$(($input % $MIN / $SEC))
+  local msecs=$(($input % $SEC / $MSEC))
+  local msecsPretty=$(printf $msecs)
+
+  local str=""
+  local short=""
+  [ $days -gt 0 ] && str="${str} ${days}d"
+  [ $hours -gt 0 ] && str="${str} ${hours}h"
+  [ $mins -gt 0 ] && str="${str} ${mins}m" && short="${short}${mins}m "
+  [ $secs -gt 0 ] && str="${str} ${secs}s" && short="${short}${secs}s"
+
+  [[ ${2} == true ]] && 
+  echo "${str}${msecsPretty}ms" || 
+  echo "${short}"
+}
+
+preCmd () {
+  CODE="${?}"
+  COLOR="88"
+  [[ ${CODE} -eq 0 ]] && COLOR="41"
+
+  [[ ${NEW_TIMER} == false ]] && return
+  NEW_TIMER=false
+  START_TIME=$(getTime)
+}
+
+postCmd () {
+  NEW_TIMER=true
+
+  local MSEC=1000000
+  local SEC=$(($MSEC * 1000))
+  local MIN=$((60 * $SEC))
+  local HOUR=$((60 * $MIN))
+  local DAY=$((24 * $HOUR))
+
+  local endTime=$(getTime)
+  local cmdTime=$(($endTime - $START_TIME))
+  local sessionTime=$(($endTime - $SESSION_START))
+  local currentTime=$(($endTime / $SEC))
+  
+  local cmdOut=$(formatDate ${cmdTime} true)
+  local sessionOut=$(formatDate ${sessionTime} false)
+  local currentOut=$(${CMD} --date="@${currentTime}" +"%H:%M %Z")
+  local cwd=$(pwd)
+
+  [[ -z "${sessionOut}" ]] && sessionOut="0s"
+  local display=$(printf "[ cmd: ${cmdOut} | code: ${CODE} | session: ${sessionOut} | ${currentOut} ]")
+  local xPos=$(($(tput cols) - ${#display}))
+  local xLen=$(( $(( $(tput cols) - ${#display} )) -  ${#cwd} ))
+  local xSpc=$(for i in $(seq ${xLen}); do printf " "; done)
+  local colorDisplay=$(printf "[ cmd: ${cmdOut} | code: \x1b[38;5;${COLOR}m${CODE}\x1b[0m | session: ${sessionOut} | ${currentOut} ]")
+  
+  printf "${sc}\x1b[0;0H${noline}${cwd}${xSpc}${colorDisplay}${rc}"
+}
+
+trap preCmd DEBUG
+PROMPT_COMMAND=postCmd

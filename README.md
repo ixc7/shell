@@ -27,5 +27,7 @@ bat-colors - preview/change bat pager colorschemes
 repl - creates a shell file and saves to current directory  
 newgrounds-dl - download and play flash files from newgrounds.com  
 interactive-buddy - a flash game  
+pip-update-all - updates all outdated python scripts
+timer - small infobar to display command/time stats
 
 ...
