@@ -1,0 +1,73 @@
+#!/usr/local/bin/bash
+
+store="${HOME}/.mongodb"
+
+config="
+processManagement:
+  fork: true
+net:
+  bindIp: http://127.0.0.1
+  port: 27017
+storage:
+  dbPath: ${store}/db
+systemLog:
+  destination: file
+  path: ${store}/mongod.log
+  logAppend: true
+storage:
+  journal:
+    enabled: true
+"
+
+scup () { echo -ne "\x1b[?1049h"; }
+rcup () { echo -ne "\x1b[?1049l"; }
+
+cleanup () { rcup; [[ -z "${1}" ]] || echo -e "${@}"; exit 0; }
+
+createNew () {
+  rm -rf "${store}" &&
+  mkdir -p "${store}/db" &&
+  echo -e "${config}" > "${store}/mongod.conf" &&
+  chmod +rwx "${store}"
+}
+
+parseFlags () {
+  while [[ ${#} -gt 0 ]]
+  do
+  case ${1} in
+    -h | --help)
+      cleanup "there is no help"
+    ;;
+    -v | --version)
+      cleanup "this is the only version"
+    ;;
+    -n | --new)
+      msg="create new database? (target: ${store})"
+      [[ -d "${store}" ]] && msg="overwrite existing database? (${store})"
+      
+      read -p "${msg} [Y/N] " res
+      if [[ ${res} == "y" ]] || [[ ${res} == "Y" ]]; then
+        createNew && break
+      else
+        cleanup
+      fi
+    ;;
+    -d | --delete)      
+      [[ -d "${store}" ]] || cleanup "no database found (target: ${store})"
+      read -p "delete database? (${store}) [Y/N] " res
+      if [[ ${res} == "y" ]] || [[ ${res} == "Y" ]]; then
+        rm -rf "${store}" && cleanup "deleted"
+      else
+        cleanup
+      fi   
+    ;;
+    *)
+      shift 
+    ;;
+  esac
+  done
+}
+
+trap cleanup EXIT
+parseFlags "${@}"
+( scup && mongod --dbpath "${store}/db" ) || cleanup "error connecting to database\ntry running \x1b[1mgodmong --new\x1b[0m"
